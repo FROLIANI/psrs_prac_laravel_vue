@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -9,14 +8,15 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $fields = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+  public function register(Request $request)
+{
+    $fields = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|unique:users',
+        'password' => 'required|string|min:6|confirmed',
+    ]);
 
+    try {
         $user = User::create([
             'name' => $fields['name'],
             'email' => $fields['email'],
@@ -26,38 +26,72 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-        'status' => true,
-        'message' => 'User registered successfully.',
-        'user' => $user,
-        'token' => $token
-    ], 201);
-    }
+            'status' => true,
+            'code' => 201,
+            'message' => 'User registered successfully.',
+            'user' => $user,
+            'token' => $token
+        ], 201);
 
-   public function login(Request $request)
+    } catch (\Exception $e) {
+        $errorId = now()->format('YmdHis') . rand(1000, 9999);
+
+        \Log::error("[$errorId] Registration failed: " . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'status' => false,
+            'code' => 500,
+            'message' => "Registration failed. Please contact Administrator with error $errorId.",
+        ], 500);
+    }
+}
+
+
+public function login(Request $request)
 {
     $fields = $request->validate([
         'email' => 'required|string|email',
         'password' => 'required|string',
     ]);
 
-    $user = User::where('email', $fields['email'])->first();
+    try {
+        $user = User::where('email', $fields['email'])->first();
 
-    if (!$user || !Hash::check($fields['password'], $user->password)) {
+        if (!$user || !Hash::check($fields['password'], $user->password)) {
+            return response()->json([
+                'status' => false,
+                'code' => 401,
+                'message' => 'Invalid credentials.',
+            ], 401);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => true,
+            'code' => 200,
+            'message' => 'Login successful.',
+            'user' => $user,
+            'token' => $token,
+        ], 200);
+
+    } catch (\Exception $e) {
+        $errorId = now()->format('YmdHis') . rand(1000, 9999);
+
+        \Log::error("[$errorId] Login failed: " . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+        ]);
+
         return response()->json([
             'status' => false,
-            'message' => 'Invalid credentials',
-        ], 401);
+            'code' => 500,
+            'message' => "Login failed. Please contact Administrator with error $errorId.",
+        ], 500);
     }
-
-    $token = $user->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'status' => true,
-        'message' => 'Login successful.',
-        'user' => $user,
-        'token' => $token,
-    ], 200);
 }
+
 
     public function logout(Request $request)
     {
