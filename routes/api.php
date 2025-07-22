@@ -12,3 +12,16 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 Route::middleware('auth:sanctum')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout']);
 });
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/admin-only', function () {
+        return response()->json(['message' => 'Welcome Admin']);
+    });
+});
+
+Route::middleware(['auth:sanctum', 'role:editor'])->group(function () {
+    Route::get('/editor-zone', function () {
+        return response()->json(['message' => 'Welcome Editor']);
+    });
+});
+
