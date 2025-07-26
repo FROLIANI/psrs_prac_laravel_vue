@@ -93,9 +93,26 @@ public function login(Request $request)
 }
 
 
-    public function logout(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Logged out successfully']);
-    }
+   public function logout(Request $request){
+  try{
+ $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'status' => true,
+            'code' => 200,
+            'message' =>'Logout Successful',
+        ]);
+  } catch (\Exception $e){
+        $errorId = now()->format('Ymdhis') .rand(1000,9999);
+        \Log::error("[$errorId ] Logout failed:" . $e->getMessage(),[
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'status'=>false,
+            'code'=>500,
+            'message'=>"Logout Failed. Please contact Administrator with error $errorId",
+        ],500);
+  }
+
+   }
 }
