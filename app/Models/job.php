@@ -1,18 +1,22 @@
 <?php
 
 namespace App\Models;
-use Illuminate\Database\Eloquent\Model;
-use Illumiante\Database\Eloquent\Factories\HasFactory;
 
-class job extends Model
+use Illuminate\Database\Eloquent\Model;
+
+class Job extends Model
 {
-    use HasFactory;
-	
-	protected $fillable =[
-	'title',
-	'department',
-	'location',
-	'salary',
-	'is_active'
-	]
+    protected $fillable = [
+        'title',
+        'department',
+        'location',
+        'salary',
+        'is_active',
+        'created_by'
+    ];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
