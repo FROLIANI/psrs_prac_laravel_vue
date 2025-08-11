@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Auth\PasswordResetController;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,6 +19,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/editor-zone', function () {
         return response()->json(['message' => 'Welcome Editor']);
     });
+	
+	Route::post('/jobs', [JobController::class, 'store']);
+	Route::get('/jobs',[JobController::class, 'index']);
+	
+	
     
    Route::post('/logout', [AuthController::class, 'logout']);
 });
